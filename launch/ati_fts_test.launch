@@ -1,0 +1,8 @@
+<launch>
+
+  <node name="ati_fts_test" pkg="elfin_ethercat_test" type="ati_fts_test" output="screen">
+    <param name="elfin_ethernet_name" value="enp2s0f1"/>
+    <param name="slave_number" value="1"/>
+  </node>
+
+</launch>
