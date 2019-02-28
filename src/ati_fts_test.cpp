@@ -38,6 +38,7 @@ Created on Mon Dec 17 09:02:30 2018
 // author: Cong Liu
 
 #include <ros/ros.h>
+#include <geometry_msgs/WrenchStamped.h>
 #include <elfin_ethercat_driver_v2/elfin_ethercat_manager_v2.h>
 
 int32_t readInput_unit(elfin_ethercat_driver_v2::EtherCatManager* manager, int slave_no, uint8_t channel)
@@ -55,6 +56,7 @@ int main(int argc, char** argv)
 {
   ros::init(argc,argv,"ati_fts_test", ros::init_options::AnonymousName);
 
+  ros::NodeHandle root_nh;
   ros::NodeHandle nh("~");
 
   std::string ethernet_name;
@@ -63,19 +65,39 @@ int main(int argc, char** argv)
   int slave_number;
   slave_number=nh.param<int>("slave_number", 1);
 
+  std::string ft_frame;
+  ft_frame=nh.param<std::string>("ft_frame", "elfin_ft_sensor");
+
+  ros::Publisher wrench_pub=root_nh.advertise<geometry_msgs::WrenchStamped>("ft_sensor/ft_raw", 1);
+
+  geometry_msgs::WrenchStamped wrench_msg;
+  wrench_msg.header.frame_id=ft_frame;
+  std::vector<double> ft_buffer;
+  ft_buffer.resize(6);
+
   elfin_ethercat_driver_v2::EtherCatManager ethercat_manager(ethernet_name);
 
-  std::string element_names[6]={"Fx", "Fy", "Fz", "Tx", "Ty", "Tz"};
+  ros::Rate r(100);
 
-  ros::Rate r(10);
+  ROS_INFO("Start publishing wrench messages");
+
   while(ros::ok())
   {
+    wrench_msg.header.stamp=ros::Time::now();
     for(int i=0; i<6; i++)
     {
       int32_t FT=readInput_unit(&ethercat_manager, slave_number, i*4);
-      std::cout<< element_names[i].c_str() << ": "<< FT << std::endl;
+      ft_buffer[i]=FT/10000.0;
     }
-    ros::spinOnce();
+    wrench_msg.wrench.force.x=ft_buffer[0];
+    wrench_msg.wrench.force.y=ft_buffer[1];
+    wrench_msg.wrench.force.z=ft_buffer[2];
+    wrench_msg.wrench.torque.x=ft_buffer[3];
+    wrench_msg.wrench.torque.y=ft_buffer[4];
+    wrench_msg.wrench.torque.z=ft_buffer[5];
+
+    wrench_pub.publish(wrench_msg);
+
     r.sleep();
   }
 

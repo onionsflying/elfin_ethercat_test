@@ -9,6 +9,7 @@ project(elfin_ethercat_test)
 ## is used, also find other catkin packages
 find_package(catkin REQUIRED COMPONENTS
   elfin_ethercat_driver_v2
+  geometry_msgs
   roscpp
 )
 
@@ -104,7 +105,7 @@ find_package(catkin REQUIRED COMPONENTS
 catkin_package(
 #  INCLUDE_DIRS include
 #  LIBRARIES elfin_ethercat_test
-#  CATKIN_DEPENDS elfin_ethercat_driver_v2 roscpp
+#  CATKIN_DEPENDS elfin_ethercat_driver_v2 geometry_msgs roscpp
 #  DEPENDS system_lib
 )
 
